@@ -1,12 +1,16 @@
 package com.shirashyad.golfstroketracker.storage.room;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
+import com.shirashyad.golfstroketracker.AppExecutors;
 import com.shirashyad.golfstroketracker.storage.room.dao.CourseDao;
 import com.shirashyad.golfstroketracker.storage.room.dao.CourseDetailsDao;
 import com.shirashyad.golfstroketracker.storage.room.dao.GameDao;
@@ -27,7 +31,6 @@ import java.util.List;
 @Database(entities = {Course.class, CourseDetails.class, Game.class, Stroke.class, User.class
 }, version = 16, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
-    private static AppDatabase INSTANCE;
 
     public abstract CourseDao courseDao();
     public abstract CourseDetailsDao courseDetailsDao();
@@ -35,46 +38,81 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract StrokeDao strokeDao();
     public abstract UserDao userDao();
 
-    public static AppDatabase getDatabase(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE =
-                    Room.databaseBuilder(context, AppDatabase.class, "userdatabase")
-                            //Room.inMemoryDatabaseBuilder(context.getApplicationContext(), AppDatabase.class)
-                            // For now allow queries on the main thread.
-                            // Don't do this on a real app!
-                            .allowMainThreadQueries()
-                            // recreate the database if necessary
-                            .fallbackToDestructiveMigration()
-                            .addCallback(new Callback() {
-                                @Override
-                                public void onCreate(@NonNull SupportSQLiteDatabase db) {
-                                    super.onCreate(db);
-                                    // Generate the data for pre-population
-                                    AppDatabase database = AppDatabase.getDatabase(context);
+    private static AppDatabase sInstance;
 
-                                    insertCourses(database, DataPrepopulator.getCourseList());
-                                    insertCourseDetailss(database, DataPrepopulator.getCourseDetailsList());
-                                }
-                            })
-                            .build();
+    @VisibleForTesting
+    public static final String DATABASE_NAME = "golf-tracker-db";
+
+    private final MutableLiveData<Boolean> mIsDatabaseCreated = new MutableLiveData<>();
+
+    public static AppDatabase getInstance(final Context context, final AppExecutors executors) {
+        if (sInstance == null) {
+            synchronized (AppDatabase.class) {
+                if (sInstance == null) {
+                    sInstance = buildDatabase(context.getApplicationContext(), executors);
+                    sInstance.updateDatabaseCreated(context.getApplicationContext());
+                }
+            }
         }
-        return INSTANCE;
+        return sInstance;
     }
 
-    public static void destroyInstance() {
-        INSTANCE = null;
+    /**
+     * Build the database. {@link Builder#build()} only sets up the database configuration and
+     * creates a new instance of the database.
+     * The SQLite database is only created when it's accessed for the first time.
+     */
+    private static AppDatabase buildDatabase(final Context appContext,
+                                             final AppExecutors executors) {
+        return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME)
+                .addCallback(new Callback() {
+                    @Override
+                    public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                        super.onCreate(db);
+                        executors.diskIO().execute(() -> {
+                            // Add a delay to simulate a long-running operation
+                            addDelay();
+                            // Generate the data for pre-population
+                            AppDatabase database = AppDatabase.getInstance(appContext, executors);
+                            insertData(database, DataPrepopulator.getCourseList(), DataPrepopulator.getCourseDetailsList());
+                            // notify that the database was created and it's ready to be used
+                            database.setDatabaseCreated();
+                        });
+                    }
+                })
+                .allowMainThreadQueries()
+                .build();
     }
 
-    private static void insertCourses(final AppDatabase database, final List<Course> courses) {
+    /**
+     * Check whether the database already exists and expose it via {@link #getDatabaseCreated()}
+     */
+    private void updateDatabaseCreated(final Context context) {
+        if (context.getDatabasePath(DATABASE_NAME).exists()) {
+            setDatabaseCreated();
+        }
+    }
+
+    private void setDatabaseCreated(){
+        mIsDatabaseCreated.postValue(true);
+    }
+
+    private static void insertData(final AppDatabase database, final List<Course> courses,
+                                   final List<CourseDetails> courseDetails) {
         database.runInTransaction(() -> {
             database.courseDao().insertAll(courses);
-        });
-    }
-
-    private static void insertCourseDetailss(final AppDatabase database, final List<CourseDetails> courseDetails) {
-        database.runInTransaction(() -> {
             database.courseDetailsDao().insertAll(courseDetails);
         });
     }
 
+    private static void addDelay() {
+        try {
+            Thread.sleep(4000);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    public LiveData<Boolean> getDatabaseCreated() {
+        return mIsDatabaseCreated;
+    }
 }

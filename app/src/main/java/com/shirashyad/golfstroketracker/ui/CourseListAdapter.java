@@ -1,20 +1,19 @@
 package com.shirashyad.golfstroketracker.ui;
 
 import android.content.Context;
-import android.graphics.Typeface;
+import android.databinding.DataBindingUtil;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.TextView;
 
 import com.shirashyad.golfstroketracker.R;
-import com.shirashyad.golfstroketracker.storage.room.entity.Course;
-import com.shirashyad.golfstroketracker.storage.room.entity.User;
+import com.shirashyad.golfstroketracker.databinding.RowItemBinding;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by chandra.shirashyad on 12/6/17.
@@ -22,161 +21,81 @@ import java.util.ArrayList;
 
 public class CourseListAdapter extends BaseAdapter implements Filterable {
 
-    private TrackerActivity activity;
-    private FriendFilter friendFilter;
-    private Typeface typeface;
-    private ArrayList<Course> courseList;
-    private ArrayList<Course> filteredList;
+    List<String> mData;
+    List<String> mStringFilterList;
+    ValueFilter valueFilter;
+    private LayoutInflater inflater;
 
-    /**
-     * Initialize context variables
-     *
-     * @param activity   tracker list activity
-     * @param courseList course list
-     */
-    public CourseListAdapter(TrackerActivity activity, ArrayList<Course> courseList) {
-        this.activity = activity;
-        this.courseList = this.courseList;
-        this.filteredList = this.courseList;
-        typeface = Typeface.createFromAsset(activity.getAssets(), "fonts/vegur_2.otf");
-
-        getFilter();
+    public CourseListAdapter(List<String> cancel_type) {
+        mData = cancel_type;
+        mStringFilterList = cancel_type;
     }
 
-    /**
-     * Get size of user list
-     *
-     * @return userList size
-     */
     @Override
     public int getCount() {
-        return filteredList.size();
+        return mData.size();
     }
 
-    /**
-     * Get specific item from user list
-     *
-     * @param i item index
-     * @return list item
-     */
     @Override
-    public Object getItem(int i) {
-        return filteredList.get(i);
+    public String getItem(int position) {
+        return mData.get(position);
     }
 
-    /**
-     * Get user list item id
-     *
-     * @param i item index
-     * @return current item id
-     */
     @Override
-    public long getItemId(int i) {
-        return i;
+    public long getItemId(int position) {
+        return position;
     }
 
-    /**
-     * Create list row view
-     *
-     * @param position index
-     * @param view     current list item view
-     * @param parent   parent
-     * @return view
-     */
     @Override
-    public View getView(int position, View view, ViewGroup parent) {
-        // A ViewHolder keeps references to children views to avoid unnecessary calls
-        // to findViewById() on each row.
-        final ViewHolder holder;
-        final User user = (User) getItem(position);
+    public View getView(int position, View convertView, final ViewGroup parent) {
 
-        if (view == null) {
-            LayoutInflater layoutInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = layoutInflater.inflate(R.layout.friend_list_row_layout, parent, false);
-            holder = new ViewHolder();
-            holder.iconText = (TextView) view.findViewById(R.id.icon_text);
-            holder.name = (TextView) view.findViewById(R.id.friend_list_row_layout_name);
-            holder.iconText.setTypeface(typeface, Typeface.BOLD);
-            holder.iconText.setTextColor(activity.getResources().getColor(R.color.white));
-            holder.name.setTypeface(typeface, Typeface.NORMAL);
-
-            view.setTag(holder);
-        } else {
-            // get view holder back
-            holder = (ViewHolder) view.getTag();
+        if (inflater == null) {
+            inflater = (LayoutInflater) parent.getContext()
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
+        RowItemBinding rowItemBinding = DataBindingUtil.inflate(inflater, R.layout.row_item, parent, false);
+        rowItemBinding.stringName.setText(mData.get(position));
 
-        // bind text with view holder content view for efficient use
-        holder.iconText.setText("#");
-        holder.name.setText(user.getEmail());
-        view.setBackgroundResource(R.drawable.friend_list_selector);
-
-        return view;
+        return rowItemBinding.getRoot();
     }
 
-    /**
-     * Get custom filter
-     *
-     * @return filter
-     */
     @Override
     public Filter getFilter() {
-        if (friendFilter == null) {
-            friendFilter = new FriendFilter();
+        if (valueFilter == null) {
+            valueFilter = new ValueFilter();
         }
-
-        return friendFilter;
+        return valueFilter;
     }
 
-    /**
-     * Keep reference to children view to avoid unnecessary calls
-     */
-    static class ViewHolder {
-        TextView iconText;
-        TextView name;
-    }
-
-    /**
-     * Custom filter for friend list
-     * Filter content in friend list according to the search text
-     */
-    private class FriendFilter extends Filter {
-
+    private class ValueFilter extends Filter {
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
-            FilterResults filterResults = new FilterResults();
-            if (constraint != null && constraint.length() > 0) {
-                ArrayList<User> tempList = new ArrayList<User>();
+            FilterResults results = new FilterResults();
 
-                // search content in friend list
-                for (User user : courseList) {
-                    if (user.getEmail().toLowerCase().contains(constraint.toString().toLowerCase())) {
-                        tempList.add(user);
+            if (constraint != null && constraint.length() > 0) {
+                List filterList = new ArrayList();
+                for (int i = 0; i < mStringFilterList.size(); i++) {
+                    if ((mStringFilterList.get(i).toUpperCase()).contains(constraint.toString().toUpperCase())) {
+                        filterList.add(mStringFilterList.get(i));
                     }
                 }
-
-                filterResults.count = tempList.size();
-                filterResults.values = tempList;
+                results.count = filterList.size();
+                results.values = filterList;
             } else {
-                filterResults.count = courseList.size();
-                filterResults.values = courseList;
+                results.count = mStringFilterList.size();
+                results.values = mStringFilterList;
             }
+            return results;
 
-            return filterResults;
         }
 
-        /**
-         * Notify about filtered list to ui
-         *
-         * @param constraint text
-         * @param results    filtered result
-         */
-        @SuppressWarnings("unchecked")
         @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            filteredList = (ArrayList<User>) results.values;
+        protected void publishResults(CharSequence constraint,
+                                      FilterResults results) {
+            mData = (List) results.values;
             notifyDataSetChanged();
         }
+
     }
 
 }

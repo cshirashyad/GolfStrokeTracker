@@ -1,56 +1,60 @@
 package com.shirashyad.golfstroketracker.ui;
 
-import android.app.SearchManager;
-import android.content.Context;
+import android.app.Activity;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.widget.SearchView;
+import android.support.v7.widget.SearchView;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Toast;
 
+import com.shirashyad.golfstroketracker.GolfStrokeTrackerApp;
 import com.shirashyad.golfstroketracker.R;
+import com.shirashyad.golfstroketracker.databinding.ActivityTrackerBinding;
+import com.shirashyad.golfstroketracker.storage.room.AppDatabase;
 
-public class TrackerActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
-    private SearchView searchView;
-    private MenuItem searchMenuItem;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TrackerActivity extends AppCompatActivity {
+    CourseListAdapter adapter;
+    List arrayList= new ArrayList();
+    ActivityTrackerBinding activityTrackerBinding;
+    private AppDatabase mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracker);
+        activityTrackerBinding = DataBindingUtil.setContentView((Activity) this, R.layout.activity_tracker);
 
-        SearchView searchView = findViewById(R.id.searchCourse);
+
+        mDatabase = ((GolfStrokeTrackerApp) getApplication()).getDatabase();
+        List<String> courses = mDatabase.courseDao().getAllCourseNames();
+        arrayList.addAll(courses);
+
+        adapter= new CourseListAdapter(arrayList);
+        activityTrackerBinding.listView.setAdapter(adapter);
+        activityTrackerBinding.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                adapter.getFilter().filter(newText);
+                return false;
+            }
+        });
+        activityTrackerBinding.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long arg3) {
+                String value = (String)adapterView.getItemAtPosition(position);
+                Toast.makeText(getApplication(), "Cool, you wanna play: " + value,
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.search_menu, menu);
-
-        SearchManager searchManager = (SearchManager)
-                getSystemService(Context.SEARCH_SERVICE);
-        searchMenuItem = menu.findItem(R.id.search);
-        searchView = (SearchView) searchMenuItem.getActionView();
-
-        searchView.setSearchableInfo(searchManager.
-                getSearchableInfo(getComponentName()));
-        searchView.setSubmitButtonEnabled(true);
-        searchView.setOnQueryTextListener(this);
-
-        return true;
-    }
-
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-//        friendListAdapter.getFilter().filter(newText);
-
-        return true;
-    }
-
 }
