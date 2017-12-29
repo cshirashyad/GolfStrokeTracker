@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         playGolf.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startTracking(view);
+                selectCourse(view);
             }
         });
         Button addCourseBtn = findViewById(R.id.addCourseBtn);
@@ -35,8 +35,8 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void startTracking(View view) {
-        Intent intent = new Intent(this, TrackerActivity.class);
+    public void selectCourse(View view) {
+        Intent intent = new Intent(this, SelectCourseActivity.class);
         startActivity(intent);
     }
 

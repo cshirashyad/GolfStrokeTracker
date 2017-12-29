@@ -17,8 +17,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.TrackerActivity" />
+        <activity android:name=".ui.SelectCourseActivity" />
         <activity android:name=".ui.CourseDetailsActivity" />
+        <activity
+            android:name=".ui.ScoreTrackerActivity"
+            android:label="@string/title_activity_score_tracker"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
