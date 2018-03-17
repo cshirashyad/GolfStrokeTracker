@@ -11,6 +11,7 @@ import android.widget.Filterable;
 
 import com.shirashyad.golfstroketracker.R;
 import com.shirashyad.golfstroketracker.databinding.RowItemBinding;
+import com.shirashyad.golfstroketracker.storage.room.entity.Course;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +22,14 @@ import java.util.List;
 
 public class CourseListAdapter extends BaseAdapter implements Filterable {
 
-    List<String> mData;
-    List<String> mStringFilterList;
+    List<Course> mData;
+    List<Course> mStringFilterList;
     ValueFilter valueFilter;
     private LayoutInflater inflater;
 
-    public CourseListAdapter(List<String> cancel_type) {
-        mData = cancel_type;
-        mStringFilterList = cancel_type;
+    public CourseListAdapter(List<Course> courses) {
+        mData = courses;
+        mStringFilterList = courses;
     }
 
     @Override
@@ -37,7 +38,7 @@ public class CourseListAdapter extends BaseAdapter implements Filterable {
     }
 
     @Override
-    public String getItem(int position) {
+    public Course getItem(int position) {
         return mData.get(position);
     }
 
@@ -54,7 +55,7 @@ public class CourseListAdapter extends BaseAdapter implements Filterable {
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
         RowItemBinding rowItemBinding = DataBindingUtil.inflate(inflater, R.layout.row_item, parent, false);
-        rowItemBinding.stringName.setText(mData.get(position));
+        rowItemBinding.stringName.setText(mData.get(position).getName());
 
         return rowItemBinding.getRoot();
     }
@@ -75,7 +76,7 @@ public class CourseListAdapter extends BaseAdapter implements Filterable {
             if (constraint != null && constraint.length() > 0) {
                 List filterList = new ArrayList();
                 for (int i = 0; i < mStringFilterList.size(); i++) {
-                    if ((mStringFilterList.get(i).toUpperCase()).contains(constraint.toString().toUpperCase())) {
+                    if ((mStringFilterList.get(i).getName().toUpperCase()).contains(constraint.toString().toUpperCase())) {
                         filterList.add(mStringFilterList.get(i));
                     }
                 }

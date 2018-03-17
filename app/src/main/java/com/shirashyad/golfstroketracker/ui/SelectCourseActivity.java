@@ -14,8 +14,11 @@ import com.shirashyad.golfstroketracker.GolfStrokeTrackerApp;
 import com.shirashyad.golfstroketracker.R;
 import com.shirashyad.golfstroketracker.databinding.ActivitySelectCourseBinding;
 import com.shirashyad.golfstroketracker.storage.room.AppDatabase;
+import com.shirashyad.golfstroketracker.storage.room.entity.Course;
+import com.shirashyad.golfstroketracker.storage.room.entity.Game;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class SelectCourseActivity extends AppCompatActivity {
@@ -31,7 +34,7 @@ public class SelectCourseActivity extends AppCompatActivity {
         activitySelectCourseBinding = DataBindingUtil.setContentView((Activity) this, R.layout.activity_select_course);
 
         mDatabase = ((GolfStrokeTrackerApp) getApplication()).getDatabase();
-        List<String> courses = mDatabase.courseDao().getAllCourseNames();
+        List<Course> courses = mDatabase.courseDao().getAllCourses();
         arrayList.addAll(courses);
 
         adapter= new CourseListAdapter(arrayList);
@@ -51,16 +54,18 @@ public class SelectCourseActivity extends AppCompatActivity {
         activitySelectCourseBinding.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long arg3) {
-                String value = (String)adapterView.getItemAtPosition(position);
-                Toast.makeText(getApplication(), "Cool, you wanna play: " + value,
+                Course selectedCourse = (Course)adapterView.getItemAtPosition(position);
+                Toast.makeText(getApplication(), "Cool, you wanna play: " + selectedCourse.getName(),
                         Toast.LENGTH_LONG).show();
-                startTracking(view);
+                startTracking(view, selectedCourse.getId());
             }
         });
     }
 
-    public void startTracking(View view) {
+    public void startTracking(View view, int courseId) {
+        Game newGame = new Game(new Date().toString(), courseId);
         Intent intent = new Intent(this, ScoreTrackerActivity.class);
+        intent.putExtra("GAME_ID", newGame.getId());
         startActivity(intent);
     }
 

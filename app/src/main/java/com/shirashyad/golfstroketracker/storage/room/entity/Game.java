@@ -20,14 +20,37 @@ import android.arch.persistence.room.PrimaryKey;
         indices = { @Index(value = "id")}
 )
 public class Game {
-    @PrimaryKey
-    public final int id;
+    @PrimaryKey(autoGenerate = true)
+    public int id;
     public String gameDate;
     public int courseId;
 
-    public Game(int id, String gameDate, int courseId) {
-        this.id = id;
+    public Game(String gameDate, int courseId) {
         this.gameDate = gameDate;
+        this.courseId = courseId;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getGameDate() {
+        return gameDate;
+    }
+
+    public void setGameDate(String gameDate) {
+        this.gameDate = gameDate;
+    }
+
+    public int getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(int courseId) {
         this.courseId = courseId;
     }
 }

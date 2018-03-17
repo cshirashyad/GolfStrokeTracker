@@ -25,4 +25,17 @@ public class Course {
         this.par = par;
         this.holes = holes;
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

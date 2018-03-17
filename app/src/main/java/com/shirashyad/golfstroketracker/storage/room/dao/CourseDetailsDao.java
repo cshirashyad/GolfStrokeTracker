@@ -1,6 +1,5 @@
 package com.shirashyad.golfstroketracker.storage.room.dao;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
@@ -21,10 +20,10 @@ public interface CourseDetailsDao {
     void addCourseDetails(CourseDetails courseDetails);
 
     @Query("select * from courseDetails")
-    public LiveData<List<CourseDetails>> getAllCourseDetails();
+    public List<CourseDetails> getAllCourseDetails();
 
     @Query("select * from courseDetails where id = :courseDetailsId")
-    public LiveData<List<CourseDetails>> getCourseDetails(long courseDetailsId);
+    public List<CourseDetails> getCourseDetails(long courseDetailsId);
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     void updateCourseDetails(CourseDetails courseDetails);

@@ -1,7 +1,5 @@
 package com.shirashyad.golfstroketracker.storage.room;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
 import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
@@ -42,8 +40,7 @@ public abstract class AppDatabase extends RoomDatabase {
 
     @VisibleForTesting
     public static final String DATABASE_NAME = "golf-tracker-db";
-
-    private final MutableLiveData<Boolean> mIsDatabaseCreated = new MutableLiveData<>();
+    private static Boolean mIsDatabaseCreated;
 
     public static AppDatabase getInstance(final Context context, final AppExecutors executors) {
         if (sInstance == null) {
@@ -70,8 +67,6 @@ public abstract class AppDatabase extends RoomDatabase {
                     public void onCreate(@NonNull SupportSQLiteDatabase db) {
                         super.onCreate(db);
                         executors.diskIO().execute(() -> {
-                            // Add a delay to simulate a long-running operation
-                            addDelay();
                             // Generate the data for pre-population
                             AppDatabase database = AppDatabase.getInstance(appContext, executors);
                             insertData(database, DataPrepopulator.getCourseList(), DataPrepopulator.getCourseDetailsList());
@@ -94,7 +89,7 @@ public abstract class AppDatabase extends RoomDatabase {
     }
 
     private void setDatabaseCreated(){
-        mIsDatabaseCreated.postValue(true);
+        mIsDatabaseCreated = true;
     }
 
     private static void insertData(final AppDatabase database, final List<Course> courses,
@@ -112,7 +107,7 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     }
 
-    public LiveData<Boolean> getDatabaseCreated() {
+    public Boolean isDatabaseCreated() {
         return mIsDatabaseCreated;
     }
 }
