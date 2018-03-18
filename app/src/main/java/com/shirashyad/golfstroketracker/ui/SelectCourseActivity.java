@@ -2,6 +2,7 @@ package com.shirashyad.golfstroketracker.ui;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 import com.shirashyad.golfstroketracker.GolfStrokeTrackerApp;
 import com.shirashyad.golfstroketracker.R;
 import com.shirashyad.golfstroketracker.databinding.ActivitySelectCourseBinding;
+import com.shirashyad.golfstroketracker.storage.keyvalue.CommonPreferences;
 import com.shirashyad.golfstroketracker.storage.room.AppDatabase;
 import com.shirashyad.golfstroketracker.storage.room.entity.Course;
 import com.shirashyad.golfstroketracker.storage.room.entity.Game;
@@ -26,6 +28,7 @@ public class SelectCourseActivity extends AppCompatActivity {
     List arrayList= new ArrayList();
     ActivitySelectCourseBinding activitySelectCourseBinding;
     private AppDatabase mDatabase;
+    CommonPreferences commonPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +36,7 @@ public class SelectCourseActivity extends AppCompatActivity {
         setContentView(R.layout.activity_select_course);
         activitySelectCourseBinding = DataBindingUtil.setContentView((Activity) this, R.layout.activity_select_course);
 
+        commonPreferences = new CommonPreferences(this);
         mDatabase = ((GolfStrokeTrackerApp) getApplication()).getDatabase();
         List<Course> courses = mDatabase.courseDao().getAllCourses();
         arrayList.addAll(courses);
@@ -63,9 +67,16 @@ public class SelectCourseActivity extends AppCompatActivity {
     }
 
     public void startTracking(View view, int courseId) {
-        Game newGame = new Game(new Date().toString(), courseId);
+        Game gameInProgress;
+        int gameIdInProgress = commonPreferences.getGameidInProgress();
+        if (gameIdInProgress == 0) {
+            gameInProgress = new Game(new Date().toString(), courseId);
+        } else {
+            gameInProgress = mDatabase.gameDao().getGame(gameIdInProgress);
+            gameInProgress.setCourseId(courseId);
+        }
         Intent intent = new Intent(this, ScoreTrackerActivity.class);
-        intent.putExtra("GAME_ID", newGame.getId());
+        intent.putExtra("GAME_ID", gameInProgress.getId());
         startActivity(intent);
     }
 

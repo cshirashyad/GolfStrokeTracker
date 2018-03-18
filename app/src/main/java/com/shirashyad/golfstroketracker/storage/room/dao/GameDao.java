@@ -23,7 +23,7 @@ public interface GameDao {
     public List<Game> getAllGame();
 
     @Query("select * from game where id = :gameId")
-    public List<Game> getGame(long gameId);
+    public Game getGame(int gameId);
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     void updateGame(Game game);
